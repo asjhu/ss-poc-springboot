@@ -1,0 +1,8 @@
+- name: Retieve ssh keys from SS
+  import_playbook: keys.yml
+
+- name: Stop Tomcat8, update app properties Restart Tomcat8
+  import_playbook: app_properties.yml
+
+- name: Clean up/Delete ssh keys
+  import_playbook: clean-up.yml

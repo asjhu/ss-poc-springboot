@@ -1,0 +1,71 @@
+---
+- name: Update Application Properties
+  hosts: appsrvgrp
+  tasks:
+    - name: Import DSS vars
+      include_vars: vars/pws
+    - name: Login to Secretes Safe
+      ansible.builtin.uri:
+        url: "{{ curl_base }}/auth/SignAppin"
+        method: POST
+        body_format: json
+        validate_certs: False
+        headers:
+          Content-Type: "application/json"
+          Authorization: "PS-Auth key={{ api_key }}; runas={{ runas_usr }};"
+      register: login
+
+    - name: Get tiaa.ws.brokerEnrollment secrets
+      uri:
+        url: "{{ curl_base }}/Secrets-Safe/Secrets/{{tiaa_enroll}}"
+        validate_certs: False
+        method: GET
+        headers:
+          Cookie: "{{login.set_cookie}}" 
+      register: ti_en_resp
+    - set_fact:
+        tia_ws_be_uname: "{{ ti_en_resp.json.Username }}"
+    - set_fact:
+        tia_ws_be_pass: "{{ ti_en_resp.json.Password }}"
+
+    - name: Get tiaa.ws.secureHeader secrets
+      uri:
+        url: "{{ curl_base }}/Secrets-Safe/Secrets/{{tiaa_sheader}}"
+        validate_certs: False
+        method: GET
+        headers:
+          Cookie: "{{login.set_cookie}}" 
+      register: ti_she_resp
+    - set_fact:
+        tia_sh_uname: "{{ ti_she_resp.json.Username }}"
+    - set_fact:
+        tia_sh_pass: "{{ ti_she_resp.json.Password }}"
+    
+    - name: Get tiaaWS.keystore.password using psrun2
+      shell: 'psrun2 {{ psrun2conn }} RetrievePassword tiaaWS_keystore_ms "{{tiaaWS_keystore_ma}}" reason'
+      register: tiaaWS_keystore
+    - set_fact:
+        tia_wsk_pass: "{{ tiaaWS_keystore.stdout }}"
+ 
+    - name: Stop tomcat8 svc
+      service:
+        name: tomcat8
+        state: stopped
+      tags:
+        - deploy
+
+    - name: Deploy Application.Properties
+      template:
+        src: templates/Application.Properties.j2
+        dest: /usr/local/tomcat8/webapps/ROOT/WEB-INF/classes/application.properties
+        force: yes
+      notify:
+        - Restart Tomcat
+
+  handlers:
+    - name: Restart Tomcat
+      service:
+        name: tomcat8
+        state: restarted
+
+...

@@ -1,0 +1,15 @@
+---
+Secrets Safe Vars
+api_host: "{{ lookup('env','ss_host') }}"
+api_key: "{{ lookup('env','api_key') }}"
+runas_usr: "{{ lookup('env','ss_id_app01') }}"
+curl_base: 'https://{{ api_host }}/BeyondTrust/api/public/v3'
+psrun2conn: '-I "{{ api_host }}" "{{ api_key }}" "{{ runas_usr }}"'
+
+Secret ID's
+
+stack_key: 32b48cde-b88e-4099-e0d7-08db377a2cda
+tiaa_enroll: 32b48cde-b88e-4099-e0d7-08db377a2c2b
+tiaa_sheader: f6966e20-6955-44b0-e0e0-08db377a21bc
+tiaaWS_keystore_ma: tiaaWS_ma
+

@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Delete stack key
+      file:
+        path: stack-key
+        state: absent 
+
+...

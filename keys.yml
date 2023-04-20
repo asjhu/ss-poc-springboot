@@ -1,0 +1,39 @@
+---
+- name: Use DSS to lookup stack key
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Import DSS vars
+      include_vars: vars/pws
+
+    - name: Login to Secretes Safe
+      ansible.builtin.uri:
+        url: "{{ curl_base }}/auth/SignAppin"
+        method: POST
+        body_format: json
+        validate_certs: False
+        headers:
+          Content-Type: "application/json"
+          Authorization: "PS-Auth key={{ api_key }}; runas={{ runas_usr }};"
+      register: login
+  
+    - name: Get Stack Key
+      uri:
+        url: "{{ curl_base }}/Secrets-Safe/Secrets/{{stack_key}}"
+        validate_certs: False
+        method: GET
+        headers:
+          Cookie: "{{login.set_cookie}}" 
+      register: stackkey 
+    - set_fact:
+        stack_key: "{{ stackkey.json.Password }}"
+
+    - name: Create temp stack key
+      copy:
+         content: "{{stack_key}}"
+         dest: stack-key
+         mode: 0600
+         owner: app
+         group: app
+
+...
